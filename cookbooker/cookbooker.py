@@ -10,15 +10,15 @@ from sys import argv
 import argparse
 import re
 import img2pdf
+import ocrmypdf
 from warnings import warn
-from subprocess import run
 from time import sleep
 
 
 def main(arguments: list) -> None:
     args = parse_arguments(arguments)
     if args.interactive:
-        args = interactive_parsing()
+        args = interactive_parsing(args)
     if (not args.url or not args.pages) and args.download:
         print("URL and Pages required for downloading, entering interactive parsing.")
         args = interactive_parsing(args)
@@ -94,6 +94,7 @@ def interactive_parsing(args: argparse.Namespace) -> argparse.Namespace:
 
 def download_images(base_url: str, npages: int, directory: Union[str, bytes, PathLike]) -> None:
     # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
+    # todo smarter timeouts for the other processes.
     expression = re.compile(r"seq=\d+")
     url_info = []
     for i in range(1, npages + 1):
@@ -115,14 +116,14 @@ def download_images(base_url: str, npages: int, directory: Union[str, bytes, Pat
 def fetch_image(url_info: Tuple[int, str]) -> Tuple[int, bytes]:
     page = url_info[0]
     url = url_info[1]
-    for i in range(10):
+    for i in range(15):
         try:
             with urlopen(url=url) as site:
                 print(f"fetching url {url}")
                 return page, site.read()
         except HTTPError as e:
-            print(f"encountered {e} on attempt {i} for page {page}, sleeping one second...")
-            sleep(1)
+            print(f"encountered {e} on attempt {i} for page {page}, sleeping {i+1} second(s)...")
+            sleep(1 + 1)
 
 
 def determine_filetype(starting_bytes: str) -> str:
@@ -168,8 +169,7 @@ def is_image(filename: str) -> bool:
 def ocr_pdf(directory: Union[str, bytes, PathLike], pdf_file):
     input_file = join(directory, pdf_file)
     output_file = join(directory, f"[OCR] {pdf_file}")
-    command = f'ocrmypdf --output-type pdf "{input_file}" "{output_file}"'
-    run(command, shell=True)
+    ocrmypdf.ocr(input_file=input_file, output_file=output_file)
 
 
 if __name__ == "__main__":
