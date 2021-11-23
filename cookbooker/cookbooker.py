@@ -13,6 +13,7 @@ import img2pdf
 import ocrmypdf
 from warnings import warn
 from time import sleep
+from random import randint
 
 
 def main(arguments: list) -> None:
@@ -94,7 +95,6 @@ def interactive_parsing(args: argparse.Namespace) -> argparse.Namespace:
 
 def download_images(base_url: str, npages: int, directory: Union[str, bytes, PathLike]) -> None:
     # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
-    # todo smarter timeouts for the other processes.
     expression = re.compile(r"seq=\d+")
     url_info = []
     for i in range(1, npages + 1):
@@ -116,14 +116,15 @@ def download_images(base_url: str, npages: int, directory: Union[str, bytes, Pat
 def fetch_image(url_info: Tuple[int, str]) -> Tuple[int, bytes]:
     page = url_info[0]
     url = url_info[1]
-    for i in range(15):
+    for i in range(10):
         try:
             with urlopen(url=url) as site:
                 print(f"fetching url {url}")
                 return page, site.read()
         except HTTPError as e:
-            print(f"encountered {e} on attempt {i} for page {page}, sleeping {i+1} second(s)...")
-            sleep(1 + 1)
+            sleep_time = randint(0, (2**i)-1)
+            print(f"encountered {e} on attempt {i} for page {page}, sleeping {sleep_time} second(s)...")
+            sleep(sleep_time)
 
 
 def determine_filetype(starting_bytes: str) -> str:
