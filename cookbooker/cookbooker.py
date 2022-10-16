@@ -35,7 +35,11 @@ def main(arguments: list) -> None:
         if exists(img_dir):
             rmtree(img_dir)
         mkdir(img_dir)
-        download_images(base_url=args.url, npages=args.pages, directory=img_dir)
+        if "babel.hathitrust.org" in args.url:
+            download_images_babel(base_url=args.url, npages=args.pages, directory=img_dir)
+        else:
+            print("Not a recognized URL, exiting...")
+            return None
     if args.pdf:
         if not exists(pdf_dif):
             mkdir(pdf_dif)
@@ -93,7 +97,7 @@ def interactive_parsing(args: argparse.Namespace) -> argparse.Namespace:
     return args
 
 
-def download_images(base_url: str, npages: int, directory: Union[str, bytes, PathLike]) -> None:
+def download_images_babel(base_url: str, npages: int, directory: Union[str, bytes, PathLike]) -> None:
     # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
     expression = re.compile(r"seq=\d+")
     url_info = []
@@ -174,20 +178,20 @@ def ocr_pdf(directory: Union[str, bytes, PathLike], pdf_file):
 
 
 if __name__ == "__main__":
-    main(argv[1:])
+    # main(argv[1:])
     # for testing
-    # main(
-    #     [
-    #         "-u",
-    #         "https://babel.hathitrust.org/cgi/imgsrv/image?id=loc.ark:/13960/t2s47dp7t;seq=7;size=125;rotation=0",
-    #         "-a",
-    #         "Thomas M. Hilliard",
-    #         "-n",
-    #         "60",
-    #         "-t",
-    #         "The Art of Carving",
-    #         "-d",
-    #         "-o",
-    #         "-p",
-    #     ]
-    # )
+    main(
+        [
+            "-u",
+            "https://babel.hathitrust.org/cgi/imgsrv/image?id=loc.ark:/13960/t2s47dp7t;seq=7;size=125;rotation=0",
+            "-a",
+            "Thomas M. Hilliard",
+            "-n",
+            "60",
+            "-t",
+            "The Art of Carving",
+            # "-d",
+            "-o",
+            "-p",
+        ]
+    )
