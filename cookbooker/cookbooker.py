@@ -45,6 +45,13 @@ def main(arguments: list) -> None:
                 directory=img_dir,
                 site=Site.BABLE,
             )
+        elif "archive.org" in args.url:
+            download_images(
+                base_url=args.url,
+                npages=args.pages,
+                directory=img_dir,
+                site=Site.ARCHIVE,
+            )
         else:
             print("Not a recognized URL, exiting...")
             return None
@@ -63,6 +70,7 @@ def main(arguments: list) -> None:
 
 class Site(Enum):
     BABLE = auto()
+    ARCHIVE = auto()
 
 
 def parse_arguments(args: list) -> argparse.Namespace:
@@ -155,11 +163,11 @@ def download_images(
     directory: Union[str, bytes, PathLike],
     site: Site,
 ) -> None:
-    # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
-    expression, replacement = get_url_replacements(base_url=base_url, site=site)
+    replacement_url = get_replacement_url(base_url=base_url, site=site)
     url_info = []
     for i in range(1, npages + 1):
-        url_info.append((i, expression.sub(f"{replacement}{i}", base_url)))
+        new_url = build_url(replacement_url=replacement_url, page_number=i, site=site)
+        url_info.append((i, new_url))
     pool = Pool(10)
     for image_data in pool.imap_unordered(fetch_image, url_info):
         page_number = image_data[0]
@@ -174,11 +182,31 @@ def download_images(
     return None
 
 
-def get_url_replacements(base_url: str, site: str):
+def get_replacement_url(base_url: str, site: Site) -> str:
     if site == Site.BABLE:
-        expression = expression = re.compile(r"seq=\d+")
-        replacement = "seq="
-        return expression, replacement
+        # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
+        replacement = "seq=PAGENUMBER"
+        expression = re.compile(r"seq=\d+")
+        replacement_url = expression.sub(replacement, base_url)
+        return replacement_url
+    elif site == Site.ARCHIVE:
+        # https://ia802509.us.archive.org/BookReader/BookReaderImages.php?zip=/22/items/
+        # letitrainwhitewa0000bird/letitrainwhitewa0000bird_jp2.zip&file=letitrainwhitewa0000bird_jp2/
+        # letitrainwhitewa0000bird_0001.jp2&id=letitrainwhitewa0000bird&scale=1&rotate=0
+        replacement = "_PAGENUMBER.jp2"
+        expression = re.compile(r"_\d+\.jp2")
+        replacement_url = expression.sub(replacement, base_url)
+        return replacement_url
+
+
+def build_url(replacement_url: str, page_number: int, site: Site) -> str:
+    replacement_string = "PAGENUMBER"
+    if site == Site.BABLE:
+        url = replacement_url.replace(replacement_string, f"{page_number}")
+        return url
+    elif site == Site.ARCHIVE:
+        url = replacement_url.replace(replacement_string, f"{page_number:04}")
+        return url
 
 
 def fetch_image(url_info: Tuple[int, str]) -> Tuple[int, bytes]:
@@ -227,7 +255,7 @@ def make_pdf(
 def find_images(directory: Union[str, bytes, PathLike]) -> List[str]:
     files = listdir(directory)
     images = filter(is_image, files)
-    images = [join(directory, image) for image in sorted(images, key=lambda x: int(x.split(".")[0]))]
+    images = [join(directory, image) for image in sorted(images, key=lambda x: int(x.split(".")[0].split("_")[-1]))]
     return images
 
 
@@ -245,20 +273,20 @@ def ocr_pdf(directory: Union[str, bytes, PathLike], pdf_file):
 
 
 if __name__ == "__main__":
-    main(argv[1:])
+    # main(argv[1:])
     # for testing
-    # main(
-    #     [
-    #         "-u",
-    #         "https://babel.hathitrust.org/cgi/imgsrv/image?id=loc.ark:/13960/t2s47dp7t;seq=7;size=125;rotation=0",
-    #         "-a",
-    #         "Thomas M. Hilliard",
-    #         "-n",
-    #         "60",
-    #         "-t",
-    #         "The Art of Carving",
-    #         "-d",
-    #         "-o",
-    #         "-p",
-    #     ]
-    # )
+    main(
+        [
+            "-u",
+            "https://ia802509.us.archive.org/BookReader/BookReaderImages.php?zip=/22/items/letitrainwhitewa0000bird/letitrainwhitewa0000bird_jp2.zip&file=letitrainwhitewa0000bird_jp2/letitrainwhitewa0000bird_0001.jp2&id=letitrainwhitewa0000bird&scale=1&rotate=0",
+            "-a",
+            "Alden Bird",
+            "-n",
+            "324",
+            "-t",
+            "Let It Rain",
+            "-d",
+            "-o",
+            "-p",
+        ]
+    )
