@@ -39,14 +39,24 @@ def main(arguments: list) -> None:
             rmtree(img_dir)
         mkdir(img_dir)
         if "babel.hathitrust.org" in args.url:
-            download_images_babel(base_url=args.url, npages=args.pages, directory=img_dir, site=Site.BABLE)
+            download_images(
+                base_url=args.url,
+                npages=args.pages,
+                directory=img_dir,
+                site=Site.BABLE,
+            )
         else:
             print("Not a recognized URL, exiting...")
             return None
     if args.pdf:
         if not exists(pdf_dif):
             mkdir(pdf_dif)
-        pdf_name = make_pdf(image_directory=img_dir, pdf_directory=pdf_dif, author=args.author, title=args.title)
+        pdf_name = make_pdf(
+            image_directory=img_dir,
+            pdf_directory=pdf_dif,
+            author=args.author,
+            title=args.title,
+        )
     if args.ocr:
         ocr_pdf(directory=pdf_dif, pdf_file=pdf_name)
 
@@ -58,9 +68,30 @@ class Site(Enum):
 def parse_arguments(args: list) -> argparse.Namespace:
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-u", "--url", help="url", default="", type=str, dest="url")
-    parser.add_argument("-n", "--pages", help="number of pages", default=0, type=int, dest="pages")
-    parser.add_argument("-a", "--author", help="name of author", default="", type=str, dest="author")
-    parser.add_argument("-t", "--title", help="title of book", default="", type=str, dest="title")
+    parser.add_argument(
+        "-n",
+        "--pages",
+        help="number of pages",
+        default=0,
+        type=int,
+        dest="pages",
+    )
+    parser.add_argument(
+        "-a",
+        "--author",
+        help="name of author",
+        default="",
+        type=str,
+        dest="author",
+    )
+    parser.add_argument(
+        "-t",
+        "--title",
+        help="title of book",
+        default="",
+        type=str,
+        dest="title",
+    )
     parser.add_argument(
         "-d",
         "--nodownload",
@@ -69,8 +100,22 @@ def parse_arguments(args: list) -> argparse.Namespace:
         action="store_false",
         dest="download",
     )
-    parser.add_argument("-p", "--pdf", help="Make pdf?", default=False, action="store_true", dest="pdf")
-    parser.add_argument("-o", "--ocr", help="OCR document?", default=False, action="store_true", dest="ocr")
+    parser.add_argument(
+        "-p",
+        "--pdf",
+        help="Make pdf?",
+        default=False,
+        action="store_true",
+        dest="pdf",
+    )
+    parser.add_argument(
+        "-o",
+        "--ocr",
+        help="OCR document?",
+        default=False,
+        action="store_true",
+        dest="ocr",
+    )
     parser.add_argument(
         "-i",
         "--interactive",
@@ -104,7 +149,12 @@ def interactive_parsing(args: argparse.Namespace) -> argparse.Namespace:
     return args
 
 
-def download_images_babel(base_url: str, npages: int, directory: Union[str, bytes, PathLike], site: Site) -> None:
+def download_images(
+    base_url: str,
+    npages: int,
+    directory: Union[str, bytes, PathLike],
+    site: Site,
+) -> None:
     # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
     expression, replacement = get_url_replacements(base_url=base_url, site=site)
     url_info = []
@@ -123,6 +173,7 @@ def download_images_babel(base_url: str, npages: int, directory: Union[str, byte
             file.write(image)
     return None
 
+
 def get_url_replacements(base_url: str, site: str):
     if site == Site.BABLE:
         expression = expression = re.compile(r"seq=\d+")
@@ -139,7 +190,7 @@ def fetch_image(url_info: Tuple[int, str]) -> Tuple[int, bytes]:
                 print(f"fetching url {url}")
                 return page, site.read()
         except HTTPError as e:
-            sleep_time = randint(0, (2**i)-1)
+            sleep_time = randint(0, (2**i) - 1)
             print(f"encountered {e} on attempt {i} for page {page}, sleeping {sleep_time} second(s)...")
             sleep(sleep_time)
 
@@ -158,7 +209,10 @@ def determine_filetype(starting_bytes: str) -> str:
 
 
 def make_pdf(
-    image_directory: Union[str, bytes, PathLike], pdf_directory: Union[str, bytes, PathLike], author: str, title: str
+    image_directory: Union[str, bytes, PathLike],
+    pdf_directory: Union[str, bytes, PathLike],
+    author: str,
+    title: str,
 ) -> str:
     image_files = find_images(directory=image_directory)
     pdf_name = f"{title} - {author}.pdf"
