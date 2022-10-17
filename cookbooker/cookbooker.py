@@ -1,4 +1,6 @@
 from __future__ import annotations
+from ast import Expression
+from email.mime import base
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from os import getcwd, mkdir, PathLike, listdir
@@ -11,6 +13,7 @@ import argparse
 import re
 import img2pdf
 import ocrmypdf
+from enum import Enum, auto
 from warnings import warn
 from time import sleep
 from random import randint
@@ -36,7 +39,7 @@ def main(arguments: list) -> None:
             rmtree(img_dir)
         mkdir(img_dir)
         if "babel.hathitrust.org" in args.url:
-            download_images_babel(base_url=args.url, npages=args.pages, directory=img_dir)
+            download_images_babel(base_url=args.url, npages=args.pages, directory=img_dir, site=Site.BABLE)
         else:
             print("Not a recognized URL, exiting...")
             return None
@@ -46,6 +49,10 @@ def main(arguments: list) -> None:
         pdf_name = make_pdf(image_directory=img_dir, pdf_directory=pdf_dif, author=args.author, title=args.title)
     if args.ocr:
         ocr_pdf(directory=pdf_dif, pdf_file=pdf_name)
+
+
+class Site(Enum):
+    BABLE = auto()
 
 
 def parse_arguments(args: list) -> argparse.Namespace:
@@ -97,12 +104,12 @@ def interactive_parsing(args: argparse.Namespace) -> argparse.Namespace:
     return args
 
 
-def download_images_babel(base_url: str, npages: int, directory: Union[str, bytes, PathLike]) -> None:
+def download_images_babel(base_url: str, npages: int, directory: Union[str, bytes, PathLike], site: Site) -> None:
     # https://babel.hathitrust.org/cgi/imgsrv/image?id=coo.31924000478770;seq=1;size=125;rotation=0
-    expression = re.compile(r"seq=\d+")
+    expression, replacement = get_url_replacements(base_url=base_url, site=site)
     url_info = []
     for i in range(1, npages + 1):
-        url_info.append((i, expression.sub(f"seq={i}", base_url)))
+        url_info.append((i, expression.sub(f"{replacement}{i}", base_url)))
     pool = Pool(10)
     for image_data in pool.imap_unordered(fetch_image, url_info):
         page_number = image_data[0]
@@ -115,6 +122,12 @@ def download_images_babel(base_url: str, npages: int, directory: Union[str, byte
         with open(image_file, "wb") as file:
             file.write(image)
     return None
+
+def get_url_replacements(base_url: str, site: str):
+    if site == Site.BABLE:
+        expression = expression = re.compile(r"seq=\d+")
+        replacement = "seq="
+        return expression, replacement
 
 
 def fetch_image(url_info: Tuple[int, str]) -> Tuple[int, bytes]:
