@@ -1,22 +1,20 @@
 from __future__ import annotations
-from ast import Expression
-from email.mime import base
-from urllib.request import urlopen
-from urllib.error import HTTPError
+from enum import Enum, auto
+from multiprocessing.pool import ThreadPool as Pool
 from os import getcwd, mkdir, PathLike, listdir
 from os.path import join, exists
+from random import randint
 from shutil import rmtree
-from multiprocessing.pool import ThreadPool as Pool
-from typing import Tuple, Union, List
 from sys import argv
+from time import sleep
+from typing import Tuple, Union, List
+from urllib.error import HTTPError
+from urllib.request import urlopen
+from warnings import warn
 import argparse
 import re
 import img2pdf
 import ocrmypdf
-from enum import Enum, auto
-from warnings import warn
-from time import sleep
-from random import randint
 
 
 def main(arguments: list) -> None:
@@ -273,20 +271,20 @@ def ocr_pdf(directory: Union[str, bytes, PathLike], pdf_file):
 
 
 if __name__ == "__main__":
-    # main(argv[1:])
+    main(argv[1:])
     # for testing
-    main(
-        [
-            "-u",
-            "https://ia802509.us.archive.org/BookReader/BookReaderImages.php?zip=/22/items/letitrainwhitewa0000bird/letitrainwhitewa0000bird_jp2.zip&file=letitrainwhitewa0000bird_jp2/letitrainwhitewa0000bird_0001.jp2&id=letitrainwhitewa0000bird&scale=1&rotate=0",
-            "-a",
-            "Alden Bird",
-            "-n",
-            "324",
-            "-t",
-            "Let It Rain",
-            "-d",
-            "-o",
-            "-p",
-        ]
-    )
+    # main(
+    #     [
+    #         "-u",
+    #         "https://ia802509.us.archive.org/BookReader/BookReaderImages.php?zip=/22/items/letitrainwhitewa0000bird/letitrainwhitewa0000bird_jp2.zip&file=letitrainwhitewa0000bird_jp2/letitrainwhitewa0000bird_0001.jp2&id=letitrainwhitewa0000bird&scale=1&rotate=0",
+    #         "-a",
+    #         "Alden Bird",
+    #         "-n",
+    #         "324",
+    #         "-t",
+    #         "Let It Rain",
+    #         "-d",
+    #         "-o",
+    #         "-p",
+    #     ]
+    # )
