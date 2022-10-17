@@ -191,20 +191,20 @@ def ocr_pdf(directory: Union[str, bytes, PathLike], pdf_file):
 
 
 if __name__ == "__main__":
-    # main(argv[1:])
+    main(argv[1:])
     # for testing
-    main(
-        [
-            "-u",
-            "https://babel.hathitrust.org/cgi/imgsrv/image?id=loc.ark:/13960/t2s47dp7t;seq=7;size=125;rotation=0",
-            "-a",
-            "Thomas M. Hilliard",
-            "-n",
-            "60",
-            "-t",
-            "The Art of Carving",
-            # "-d",
-            "-o",
-            "-p",
-        ]
-    )
+    # main(
+    #     [
+    #         "-u",
+    #         "https://babel.hathitrust.org/cgi/imgsrv/image?id=loc.ark:/13960/t2s47dp7t;seq=7;size=125;rotation=0",
+    #         "-a",
+    #         "Thomas M. Hilliard",
+    #         "-n",
+    #         "60",
+    #         "-t",
+    #         "The Art of Carving",
+    #         "-d",
+    #         "-o",
+    #         "-p",
+    #     ]
+    # )
